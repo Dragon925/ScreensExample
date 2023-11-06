@@ -7,6 +7,8 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.navigation.fragment.findNavController
 import com.github.dragon925.screensexample.databinding.FragmentSecondBinding
+import com.github.dragon925.screensexample.domain.item.EventItem
+import com.github.dragon925.screensexample.ui.adapters.EventListAdapter
 
 class SecondFragment : Fragment() {
 
@@ -33,6 +35,15 @@ class SecondFragment : Fragment() {
         binding.btnBack.setOnClickListener {
             findNavController().navigateUp()
         }
+
+        val eventAdapter = EventListAdapter()
+        binding.rvList.adapter = eventAdapter
+
+        eventAdapter.submitList(
+            List<EventItem>(10) {
+                EventItem(it, "18:00", "#$it")
+            }
+        )
     }
 
 
