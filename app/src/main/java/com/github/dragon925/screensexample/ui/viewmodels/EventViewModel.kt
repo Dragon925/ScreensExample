@@ -4,23 +4,22 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MediatorLiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.asLiveData
 import androidx.lifecycle.map
 import androidx.lifecycle.viewModelScope
+import com.github.dragon925.screensexample.data.dao.EventsDao
 import com.github.dragon925.screensexample.data.repository.EventRepositoryImpl
 import com.github.dragon925.screensexample.domain.item.EventItem
-import com.github.dragon925.screensexample.domain.model.Event
 import com.github.dragon925.screensexample.domain.repository.EventRepository
 import com.github.dragon925.screensexample.utils.toEventItem
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import java.util.Date
 
-class EventViewModel : ViewModel() {
+class EventViewModel(private val repository: EventRepository) : ViewModel() {
 
-    private val repository: EventRepository = EventRepositoryImpl
-
-    private val data = MutableLiveData<List<Event>>(emptyList())
+    private val data = repository.getEvents().asLiveData()
 
     private val _events: LiveData<List<EventItem>> = data.map { list ->
         list.map { it.toEventItem() }
@@ -46,28 +45,22 @@ class EventViewModel : ViewModel() {
             }
         }
 
-    init {
-        viewModelScope.launch(Dispatchers.IO) {
-            val list = repository.getEvents()
-            withContext(Dispatchers.Main) {
-                data.value = list
-            }
-        }
-    }
-
     fun submitQuery(query: String?) {
         _query.value = query ?: ""
     }
 
     fun addEvent(name: String) {
         val time = Date().time
-        val list = data.value?.toMutableList() ?: mutableListOf()
         viewModelScope.launch(Dispatchers.IO) {
-            val id = repository.addEvent(name, time) ?: -1
-            list.add(Event(id, name, time))
-            withContext(Dispatchers.Main) {
-                data.value = list
-            }
+            repository.addEvent(name, time)
+        }
+    }
+
+    class Factory(private val dao: EventsDao) : ViewModelProvider.Factory {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : ViewModel> create(modelClass: Class<T>): T {
+            val repository = EventRepositoryImpl(dao)
+            return EventViewModel(repository) as T
         }
     }
 }

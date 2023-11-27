@@ -10,13 +10,17 @@ import android.view.ViewGroup
 import androidx.fragment.app.viewModels
 import androidx.navigation.fragment.findNavController
 import com.github.dragon925.screensexample.databinding.FragmentSecondBinding
+import com.github.dragon925.screensexample.domain.database.RoomHandler
 import com.github.dragon925.screensexample.domain.item.EventItem
 import com.github.dragon925.screensexample.ui.adapters.EventListAdapter
 import com.github.dragon925.screensexample.ui.viewmodels.EventViewModel
 
 class SecondFragment : Fragment() {
 
-    private val viewModel: EventViewModel by viewModels()
+    private val viewModel: EventViewModel by viewModels {
+        val app = requireActivity().application as RoomHandler
+        EventViewModel.Factory(app.getEventsDao())
+    }
 
     private var _binding: FragmentSecondBinding? = null
     private val binding get() = _binding!!
